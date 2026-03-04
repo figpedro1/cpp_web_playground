@@ -6,7 +6,7 @@ int main() {
 
     // Rota inicial: responde ao acessar http://seu-ip/
     CROW_ROUTE(app, "/")([](){
-        return "Conexão estabelecida com o cpp_web_playground!";
+        return "Servidor está funcionando!!! Hospedado na AWS";
     });
 
     // Rota de teste: responde em http://seu-ip/ping
