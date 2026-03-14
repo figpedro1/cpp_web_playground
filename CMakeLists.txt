@@ -14,8 +14,18 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_definitions(-DCROW_USE_BOOST)
 add_definitions(-DASIO_STANDALONE)
 
+include(FetchContent)
+FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
+                         GIT_TAG 1.14.2)
+FetchContent_MakeAvailable(cpr)
+
 add_executable(cpp_web_playground
     src/main.cpp
 )
 
-target_link_libraries(cpp_web_playground Boost::system Threads::Threads)
+target_link_libraries(cpp_web_playground 
+    PRIVATE
+    Boost::system 
+    Threads::Threads 
+    cpr::cpr
+)
