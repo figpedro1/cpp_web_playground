@@ -7,8 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Boost CONFIG REQUIRED COMPONENTS system)
 find_package(Threads REQUIRED)
 
-include_directories(include)
-include_directories(include/external)
+include_directories(.)
 include_directories(${Boost_INCLUDE_DIRS})
 
 add_definitions(-DCROW_USE_BOOST)
