@@ -1,6 +1,6 @@
-#include "apps/autodesk_viewer/include/auth.hpp"
+#include "auth.hpp"
 
-#include "include/utils.hpp"
+#include "utils.hpp"
 #include <iostream>
 #include <string>
 #include <optional>

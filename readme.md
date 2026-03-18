@@ -65,3 +65,10 @@ npm run preview
 ## 5) Dicas rápidas
 - Se `sudo` for necessário para usar porta 80, use `sudo` para executar o binário.
 - Para mudar porta, edite `src/main.cpp` e use `.port(8080)`.
+
+## 6) Coisas a adicionar no readme posteriormente
+- Criar arquivo .env
+
+  # Template de arquivo .env:
+    APS_CLIENT_ID="Client ID api autodesk"
+    APS_CLIENT_SECRET="Client secret api autodesk"
