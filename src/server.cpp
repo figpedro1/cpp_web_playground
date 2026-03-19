@@ -1,6 +1,8 @@
-#include "server.hpp"
+#include "Server.hpp"
 
 #include "ServerConfig.hpp"
+#include "viewer_app.hpp"
+#include "viewer_Token.hpp"
 #include "crow.h"
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -40,11 +42,18 @@ namespace server {
         });
 
         CROW_ROUTE(this->app, "/test_auth")([this](){
-            std::optional<nlohmann::json> r = this->autodesk_viewer->get_viewer_token();
-            if (!r) {
+            std::optional<autodesk_viewer::Token> token = this->autodesk_viewer->get_viewer_token();
+            if (!token) {
                 return std::string("pluh");
             }
-            return r.value().dump();
+
+            nlohmann::json response_body = {
+                {"access_token", token.value().access_token},
+                {"token_type", token.value().token_type},
+                {"expires_in", token.value().expires_in}
+            };
+
+            return response_body.dump();
         });
 
         }

@@ -1,6 +1,6 @@
 #include "crow.h"
 #include "ServerConfig.hpp"
-#include "server.hpp"
+#include "Server.hpp"
 #include <iostream>
 
 int main() {

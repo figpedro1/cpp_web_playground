@@ -6,6 +6,6 @@
 
 namespace autodesk_viewer {
 
-    std::optional<cpr::Response> get_token (std::string client_id, std::string client_secret, std::string scope);
+    nlohmann::json get_token (std::string client_id, std::string client_secret, std::string scope = "viewables:read", std::string auth_type = "Basic");
 
 }
