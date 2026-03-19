@@ -17,7 +17,7 @@ namespace autodesk_viewer {
 
         cpr::Response r = cpr::Post(
             cpr::Url{"https://developer.api.autodesk.com/authentication/v2/token"},
-            cpr::Header{{"Authorization", "Basic" + b64credentials}, {"Content-Type", "application/x-www-form-urlencoded"}},
+            cpr::Header{{"Authorization", "Basic " + b64credentials}, {"Content-Type", "application/x-www-form-urlencoded"}},
             cpr::Payload{{"grant_type", "client_credentials"}, {"scope", scope}}
         );
 
