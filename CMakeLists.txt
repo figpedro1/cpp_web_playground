@@ -9,6 +9,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 find_package(Boost CONFIG REQUIRED COMPONENTS system)
 find_package(Threads REQUIRED)
+find_package(PostgreSQL REQUIRED)
+find_library(PQXX_LIB pqxx REQUIRED)
 
 FetchContent_Declare(
     cpr
@@ -45,4 +47,6 @@ target_link_libraries(cpp_web_playground
     Threads::Threads
     cpr::cpr
     nlohmann_json::nlohmann_json
+    ${PostgreSQL_LIBRARIES}
+    pqxx
 )

@@ -10,11 +10,21 @@
 #include <iostream>
 #include <dotenv.h>
 #include <memory>
+#include <filesystem>
 
 namespace server {
 
     Server::Server () {
         dotenv::init();
+
+        const char* env_ptr = std::getenv("APP_ENV");
+
+        if (env_ptr == nullptr) {
+            CROW_LOG_CRITICAL << ".env file or APP_ENV variable not found";
+        } else {
+            CROW_LOG_INFO << ".env file initialized successfully";
+        }
+
         this->cfg.client_id = std::getenv("APS_CLIENT_ID") ?: "";
         this->cfg.client_secret = std::getenv("APS_CLIENT_SECRET") ?: "";
         try {
@@ -44,7 +54,7 @@ namespace server {
         });
 
         CROW_ROUTE(this->app, "/test_auth")([this](){
-            std::optional<autodesk_viewer::Token> token = this->autodesk_viewer->get_viewer_token();
+            std::optional<autodesk_viewer::Token> token = this->autodesk_viewer->get_public_token();
             if (!token) {
                 crow::response res("pluh");
                 res.set_header("Content-Type", "text/plain; charset=utf-8");
