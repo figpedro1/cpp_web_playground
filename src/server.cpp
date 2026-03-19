@@ -12,7 +12,7 @@
 namespace server {
 
     Server::Server () {
-        dotenv::init();
+        dotenv::init("../.env");
         this->cfg.client_id = std::getenv("APS_CLIENT_ID") ?: "";
         this->cfg.client_secret = std::getenv("APS_CLIENT_SECRET") ?: "";
         try {
@@ -32,7 +32,7 @@ namespace server {
     void Server::setup_routes () {
         
         CROW_ROUTE(this->app, "/")([](){
-            return "Servidor está funcionando!!! Hospedado na AWS";
+            return "Servidor está funcionando!!!";
         });
 
         CROW_ROUTE(this->app, "/ping")([](){
@@ -51,6 +51,7 @@ namespace server {
 
     void Server::start_server() {
         this->setup_routes();
+        std::cout << "App rodando na porta " + this->cfg.port << std::endl;
         this->app.port(this->cfg.port).multithreaded().run();
     }
 
