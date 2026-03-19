@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 project(cpp_web_playground)
+set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

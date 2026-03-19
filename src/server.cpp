@@ -34,7 +34,9 @@ namespace server {
     void Server::setup_routes () {
         
         CROW_ROUTE(this->app, "/")([](){
-            return "Servidor está funcionando!!!";
+            crow::response res("Servidor está funcionando!");
+            res.set_header("Content-Type", "text/plain; charset=utf-8");
+            return res;
         });
 
         CROW_ROUTE(this->app, "/ping")([](){
@@ -44,7 +46,9 @@ namespace server {
         CROW_ROUTE(this->app, "/test_auth")([this](){
             std::optional<autodesk_viewer::Token> token = this->autodesk_viewer->get_viewer_token();
             if (!token) {
-                return std::string("pluh");
+                crow::response res("pluh");
+                res.set_header("Content-Type", "text/plain; charset=utf-8");
+                return res;
             }
 
             nlohmann::json response_body = {
@@ -53,7 +57,10 @@ namespace server {
                 {"expires_in", token.value().expires_in}
             };
 
-            return response_body.dump();
+            crow::response res(response_body.dump());
+            res.set_header("Content-Type", "application/json; charset=utf-8");
+
+            return res;
         });
 
         }
