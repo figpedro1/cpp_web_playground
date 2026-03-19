@@ -16,7 +16,7 @@ namespace server {
         this->cfg.client_id = std::getenv("APS_CLIENT_ID") ?: "";
         this->cfg.client_secret = std::getenv("APS_CLIENT_SECRET") ?: "";
         try {
-            int port = std::stoi(std::getenv("SERVER_PORT") ?: "8080");
+            int port = std::stoi(std::getenv("SERVER_PORT"));
             if (port < 10 || port > 9999) {
                 port = 8080;
             }
@@ -51,7 +51,7 @@ namespace server {
 
     void Server::start_server() {
         this->setup_routes();
-        std::cout << "App rodando na porta " + this->cfg.port << std::endl;
+        std::cout << "App rodando na porta " << this->cfg.port << std::endl;
         this->app.port(this->cfg.port).multithreaded().run();
     }
 
