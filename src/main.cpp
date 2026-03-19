@@ -1,12 +1,12 @@
 #include "crow.h"
 #include "ServerConfig.hpp"
-#include "routes.hpp"
+#include "server.hpp"
 #include <iostream>
 
 int main() {
-    crow::SimpleApp app;
-    ServerConfig cfg;
-    server::setup_routes(app, cfg);
+    server::Server server;
 
+    server.start_server();
+    
     return 0;
 }

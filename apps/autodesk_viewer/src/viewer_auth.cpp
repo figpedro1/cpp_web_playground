@@ -1,4 +1,4 @@
-#include "auth.hpp"
+#include "viewer_auth.hpp"
 
 #include "utils.hpp"
 #include <iostream>
@@ -8,13 +8,12 @@
 #include <cpr/cpr.h>
 
 
-using nlohmann::json;
-using std::string;
 
-namespace auth {
+
+namespace autodesk_viewer {
     
-    std::optional<json> get_token (string client_id, string client_secret, string scope){
-        string b64credentials = utils::base64_encode(client_id + ":" + client_secret);
+    std::optional<cpr::Response> get_token (std::string client_id, std::string client_secret, std::string scope = "viewables:read"){
+        std::string b64credentials = utils::base64_encode(client_id + ":" + client_secret);
 
         cpr::Response r = cpr::Post(
             cpr::Url{"https://developer.api.autodesk.com/authentication/v2/token"},
@@ -26,7 +25,7 @@ namespace auth {
             return std::nullopt;
         }
 
-        return json::parse(r.text);
+        return r;
     }
     
 }
