@@ -14,7 +14,7 @@
 namespace server {
 
     Server::Server () {
-        dotenv::init("../.env");
+        dotenv::init();
         this->cfg.client_id = std::getenv("APS_CLIENT_ID") ?: "";
         this->cfg.client_secret = std::getenv("APS_CLIENT_SECRET") ?: "";
         try {

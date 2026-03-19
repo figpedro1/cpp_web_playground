@@ -23,15 +23,16 @@ namespace autodesk_viewer {
         }
 
         nlohmann::json r = autodesk_viewer::get_token(this->client_id, this->client_secret, "viewables:read");
-
-        if (r["status_code"] != "200") {
-            CROW_LOG_ERROR << "Could not retrieve access token, error: " << r["error"] << "          error message: " << r["error_description"];
+        CROW_LOG_DEBUG << "API KEY: " << this->client_id;
+        CROW_LOG_DEBUG << "API SECRET: " << this->client_secret;
+        if (r["status_code"] != 200) {
+            CROW_LOG_ERROR << "Could not retrieve access token, error: " << r.dump(2);
             return std::nullopt;
         }
 
-        this->token.access_token = r["access_token"];
-        this->token.token_type = r["token_type"];
-        this->token.expires_in = r["expires_in"];
+        this->token.access_token = r["body"]["access_token"];
+        this->token.token_type = r["body"]["token_type"];
+        this->token.expires_in = r["body"]["expires_in"];
         this->token.expiry_time = std::chrono::system_clock::now() + std::chrono::seconds(this->token.expires_in/2);
         this->token.refresh_token = "N/A";
         this->token.scope = "viewables:read";

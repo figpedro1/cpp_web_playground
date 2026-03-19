@@ -21,7 +21,7 @@ namespace autodesk_viewer {
             cpr::Payload{{"grant_type", "client_credentials"}, {"scope", scope}}
         );
         
-        nlohmann::json token{{"status_code", std::to_string(r.status_code)}, {"body", nlohmann::json::parse(r.text)}};
+        nlohmann::json token{{"status_code", r.status_code}, {"body", nlohmann::json::parse(r.text)}};
 
         return token;
     }
