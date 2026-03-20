@@ -5,8 +5,12 @@
 
 namespace server {
     struct ServerConfig {
-        std::string client_id;
-        std::string client_secret;
+        std::string autodesk_client_id;
+        std::string autodesk_client_secret;
+        std::string database_name;
+        std::string database_user;
+        std::string database_password;
+        std::string database_address;
         int port;
     };
 }

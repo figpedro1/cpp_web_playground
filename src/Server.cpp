@@ -5,37 +5,18 @@
 #include <optional>
 #include <string>
 #include <iostream>
-#include <dotenv.h>
 #include <memory>
 #include <filesystem>
 
 namespace server {
 
-    Server::Server () {
-        dotenv::init();
+    Server::Server (ServerConfig server_config) {
+        this->cfg = server_config;
 
-        const char* env_ptr = std::getenv("APP_ENV");
-
-        if (env_ptr == nullptr) {
-            CROW_LOG_CRITICAL << ".env file or APP_ENV variable not found";
-        } else {
-            CROW_LOG_INFO << ".env file initialized successfully";
-        }
-
-        this->cfg.client_id = std::getenv("APS_CLIENT_ID") ?: "";
-        this->cfg.client_secret = std::getenv("APS_CLIENT_SECRET") ?: "";
-        try {
-            int port = std::stoi(std::getenv("SERVER_PORT"));
-            if (port < 10 || port > 9999) {
-                port = 8080;
-            }
-            this->cfg.port = port;
-        } catch (...) {
-            this->cfg.port = 8080;
-        }
-
-        this->autodesk_viewer = std::make_unique<autodesk_viewer::AutodeskViewer>(this->cfg.client_id, this->cfg.client_secret);
-
+        this->autodesk_viewer = std::make_unique<autodesk_viewer::AutodeskViewer>(this->cfg.autodesk_client_id, this->cfg.autodesk_client_secret);
+        
+        std::string db_connection_string = "postgresql://" + this->cfg.database_user + ":" + this->cfg.database_password + "@" + this->cfg.database_address + "/" + this->cfg.database_name + "?sslmode=disable";
+        this->db = std::make_unique<DBPool>(db_connection_string, 2);
     }
     
     void Server::setup_routes () {

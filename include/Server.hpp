@@ -11,9 +11,10 @@ namespace server {
             std::unique_ptr<autodesk_viewer::AutodeskViewer> autodesk_viewer;
             crow::SimpleApp app;
             ServerConfig cfg;
+            std::unique_ptr<DBPool> db;
 
         public:
-            Server();
+            Server(ServerConfig server_config);
             void setup_routes();
             void start_server();
     };
