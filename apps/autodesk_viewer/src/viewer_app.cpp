@@ -1,14 +1,9 @@
 #include "viewer_app.hpp"
 
-#include "viewer_Token.hpp"
 #include "viewer_auth.hpp"
 #include "crow.h"
 #include "dotenv.h"
-#include <nlohmann/json.hpp>
-#include <string>
-#include <optional>
 #include <chrono>
-#include <mutex>
 
 namespace autodesk_viewer {
     AutodeskViewer::AutodeskViewer(std::string aps_client_id, std::string aps_client_secret){

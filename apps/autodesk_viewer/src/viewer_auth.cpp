@@ -2,13 +2,6 @@
 
 #include "utils.hpp"
 #include <iostream>
-#include <string>
-#include <optional>
-#include <nlohmann/json.hpp>
-#include <cpr/cpr.h>
-
-
-
 
 namespace autodesk_viewer {
     

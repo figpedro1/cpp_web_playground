@@ -3,6 +3,7 @@
 #include "crow.h"
 #include "viewer_app.hpp"
 #include "ServerConfig.hpp"
+#include "DBPool.hpp"
 
 namespace server {
     class Server{
