@@ -11,6 +11,8 @@ namespace server {
         std::string database_user;
         std::string database_password;
         std::string database_address;
+        std::string storage_root_dir;
+        std::string viewer_dir;
         int port;
     };
 }

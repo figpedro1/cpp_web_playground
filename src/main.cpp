@@ -34,6 +34,8 @@ int main() {
     server_config.database_user = std::getenv("DB_USER") ?: "";
     server_config.database_password = std::getenv("DB_PSWD") ?: "";
     server_config.database_address = std::getenv("DB_ADDR") ?: "";
+    server_config.storage_root_dir = std::getenv("STORAGE_ROOT_DIR") ?: "";
+    server_config.viewer_dir = std::getenv("VIEWER_DIR") ?: "";
     try {
         int port = std::stoi(std::getenv("SERVER_PORT"));
         if (port < 10 || port > 9999) {

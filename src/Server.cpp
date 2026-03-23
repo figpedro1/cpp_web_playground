@@ -13,10 +13,16 @@ namespace server {
     Server::Server (ServerConfig server_config) {
         this->cfg = server_config;
 
-        this->autodesk_viewer = std::make_unique<autodesk_viewer::AutodeskViewer>(this->cfg.autodesk_client_id, this->cfg.autodesk_client_secret);
-        
         std::string db_connection_string = "postgresql://" + this->cfg.database_user + ":" + this->cfg.database_password + "@" + this->cfg.database_address + "/" + this->cfg.database_name + "?sslmode=disable";
-        this->db = std::make_unique<DBPool>(db_connection_string, 2);
+        try {
+        this->db = std::make_shared<DBPool>(db_connection_string, 2);
+        } catch (...) {
+            CROW_LOG_CRITICAL << "Unable to connect to database.";
+        }
+
+        this->autodesk_viewer = std::make_unique<autodesk_viewer::AutodeskViewer>(this->cfg, this->db);
+
+        this->autodesk_viewer->sync_db();
     }
     
     void Server::setup_routes () {

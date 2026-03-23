@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(FetchContent)
+find_package(OpenSSL REQUIRED)
 find_package(Boost CONFIG REQUIRED COMPONENTS system)
 find_package(Threads REQUIRED)
 find_package(PostgreSQL REQUIRED)
@@ -34,8 +35,10 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 
 add_executable(cpp_web_playground ${SOURCES})
 
-target_include_directories(cpp_web_playground PRIVATE 
+target_include_directories(cpp_web_playground
+    PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${OPENSSL_INCLUDE_DIR}
     include
     include/external
     apps/autodesk_viewer/include
@@ -49,4 +52,6 @@ target_link_libraries(cpp_web_playground
     nlohmann_json::nlohmann_json
     ${PostgreSQL_LIBRARIES}
     pqxx
+    OpenSSL::SSL
+    OpenSSL::Crypto
 )
