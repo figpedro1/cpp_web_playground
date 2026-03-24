@@ -15,7 +15,10 @@ namespace server {
 
         std::string db_connection_string = "postgresql://" + this->cfg.database_user + ":" + this->cfg.database_password + "@" + this->cfg.database_address + "/" + this->cfg.database_name + "?sslmode=disable";
         try {
-        this->db = std::make_shared<DBPool>(db_connection_string, 2);
+        
+            this->db = std::make_shared<database::DBPool>(db_connection_string, 2);
+
+            CROW_LOG_INFO << "Database connection successfully estabilished";
         } catch (...) {
             CROW_LOG_CRITICAL << "Unable to connect to database.";
         }
