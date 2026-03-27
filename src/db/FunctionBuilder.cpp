@@ -8,7 +8,7 @@ namespace database {
     }
     FunctionBuilder::FunctionBuilder(){}
 
-    FunctionBuilder& FunctionBuilder::add_param(std::string param){
+    FunctionBuilder& FunctionBuilder::add_param(FunctionParam param){
         this->params.push_back(std::move(param));
         return *this;
     }
@@ -22,8 +22,8 @@ namespace database {
         std::string func;
 
         for(const auto& param : this->params){
-            if (!func.empty()) func += ", ";
-            func += param;
+            if (!func.empty()) func += param.comma_separated ? ", " : "";
+            func += param.value;
         }
 
         return this->function + "(" + func + ")";
@@ -36,19 +36,19 @@ namespace database {
                   return a.position < b.position; 
               });
 
-        std::vector<std::string> temp = this->params;
+        std::vector<FunctionParam> temp = this->params;
         if (!this->insert_in_positions.empty()) {
             for (const auto& pos : this->insert_in_positions){
                     std::string insert = "";
                     if (pos.value != ""){
-                        insert = pos.value + ":= $" + std::to_string(current);
+                        insert = pos.value + (pos.equals_needed ? " := $" : " $") + std::to_string(current);
                     } else {
                         insert = "$" + std::to_string(current);
                     }
                     if (pos.position >= temp.size()) {
-                        temp.push_back(insert);
+                        temp.push_back(FunctionParam{.value = insert});
                     } else {
-                        temp.insert(temp.begin() + pos.position, insert);
+                        temp.insert(temp.begin() + pos.position, FunctionParam{.value = insert});
                     }
                 ++current;
             }
@@ -58,7 +58,7 @@ namespace database {
 
         for(const auto& param : temp){
             if (!func.empty()) func += ", ";
-            func += param;
+            func += param.value;
         }
 
         return this->function + "(" + func + ")";

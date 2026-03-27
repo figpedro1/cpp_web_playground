@@ -24,6 +24,11 @@ namespace database {
         return *this;
     };
 
+    QueryBuilder& QueryBuilder::add_where(std::vector<ColumnValue> column){
+        this->where_clauses.insert(this->where_clauses.end(), column.begin(), column.end());
+        return *this;
+    }
+
     QueryBuilder& QueryBuilder::add_update(std::string column, std::optional<FunctionBuilder> func_builder, std::optional<QueryBuilder> select_query){
         ColumnValue val = {.column = std::move(column), .query_builder = std::move(select_query), .function_builder = func_builder};
         this->update_columns.push_back(std::move(val));
@@ -33,7 +38,12 @@ namespace database {
     QueryBuilder& QueryBuilder::add_update(ColumnValue column){
         this->update_columns.push_back(std::move(column));
         return *this;
-    };
+    }
+
+    QueryBuilder& QueryBuilder::add_update(std::vector<ColumnValue> column){
+        this->update_columns.insert(this->update_columns.begin(), column.begin(), column.end());
+        return *this;
+    }
 
     QueryBuilder& QueryBuilder::add_insert(std::string column, std::optional<FunctionBuilder> func_builder, std::optional<QueryBuilder> select_query){
         ColumnValue val = {.column = std::move(column), .query_builder = std::move(select_query), .function_builder = func_builder};
@@ -46,19 +56,28 @@ namespace database {
         return *this;
     };
 
-    QueryBuilder& QueryBuilder::add_conflict(std::string column, std::optional<FunctionBuilder> func_builder, std::optional<QueryBuilder> select_query = std::nullopt){
-        ColumnValue val = {.column = std::move(column), .query_builder = std::move(select_query), .function_builder = func_builder};
-        this->conflict_columns.push_back(std::move(val));
+    QueryBuilder& QueryBuilder::add_insert(std::vector<ColumnValue> column){
+        this->insert_columns.insert(this->insert_columns.end(), column.begin(), column.end());
         return *this;
     }
 
-    QueryBuilder& QueryBuilder::add_conflict(ColumnValue column){
+    QueryBuilder& QueryBuilder::add_conflict(std::string column){
         this->conflict_columns.push_back(std::move(column));
         return *this;
-    };
+    }
+
+    QueryBuilder& QueryBuilder::add_conflict(std::vector<std::string> column){
+        this->conflict_columns.insert(this->conflict_columns.end(), column.begin(), column.end());
+        return *this;
+    }
 
     QueryBuilder& QueryBuilder::add_select(std::string column){
         this->select_columns.push_back(std::move(column));
+        return *this;
+    }
+
+    QueryBuilder& QueryBuilder::add_select(std::string column){
+        this->select_columns.insert(this->select_columns.end(), column.begin(), column.end());
         return *this;
     }
 
@@ -97,7 +116,7 @@ namespace database {
         if (!this->conflict_columns.empty() && !no_conflict) {        
             for (const auto& conflict : this->conflict_columns) {
                     if (!conflicts.empty()) conflicts += ", ";
-                    conflicts += conflict.column;
+                    conflicts += conflict;
             }
 
             query += " ON CONFLICT (" + conflicts + ") DO NOTHING";
@@ -143,7 +162,7 @@ namespace database {
         std::string conflicts;
         for (const auto& conflict : this->conflict_columns) {
             if (!conflicts.empty()) conflicts += ", ";
-            conflicts += conflict.column;
+            conflicts += conflict;
         }
 
         return this->build_insert_query(true) + " ON CONFLICT (" + conflicts + ") DO " + build_update_query(true, true);
@@ -157,11 +176,10 @@ namespace database {
         return "DELETE FROM" + this->table_name.value() + this->build_where(current_param);
     }
 
-    std::string QueryBuilder::build_select_query() const {
-        if (this->where_clauses.empty()){
+    std::string QueryBuilder::build_select_query(bool no_where, uintmax_t limit) const {
+        if (this->where_clauses.empty() && !no_where){
             return "";
         }
-
         
         std::string select;
         for (const auto& i : this->select_columns) {
@@ -171,7 +189,8 @@ namespace database {
 
         size_t current_param = 1;
 
-        return "SELECT " + (select.empty() ? "*" : select) + " FROM " + this->table_name.value() + this->build_where(current_param);
+        return "SELECT " + (select.empty() ? "*" : select) + " FROM " + this->table_name.value() +
+            (no_where ? "" : this->build_where(current_param)) + (limit == 0 ? "" : "LIMIT " + std::to_string(limit));
     }
 
     std::string QueryBuilder::build_select_query(size_t& current_param) const {

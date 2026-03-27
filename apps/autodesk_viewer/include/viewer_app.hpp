@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DBPool.hpp"
+#include "db/DBPool.hpp"
 #include "ServerConfig.hpp"
 #include "viewer_Token.hpp"
 #include <nlohmann/json.hpp>
@@ -20,11 +20,11 @@ namespace autodesk_viewer{
             std::filesystem::path storage_dir;
             std::mutex pvt_token_mutex;
             std::mutex pb_token_mutex;
-            std::shared_ptr<DBPool>& db;
+            std::shared_ptr<database::DBPool> db;
 
 
         public:
-            AutodeskViewer(server::ServerConfig cfg, std::shared_ptr<DBPool> db_pool);
+            AutodeskViewer(server::ServerConfig cfg, std::shared_ptr<database::DBPool> db_pool);
             std::optional<Token> get_public_token ();
             std::optional<Token> get_private_token ();
             void sync_db();

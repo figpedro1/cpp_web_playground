@@ -10,7 +10,7 @@
 #include <memory>
 
 namespace autodesk_viewer {
-    AutodeskViewer::AutodeskViewer(server::ServerConfig cfg, std::shared_ptr<DBPool> db_pool)
+    AutodeskViewer::AutodeskViewer(server::ServerConfig cfg, std::shared_ptr<database::DBPool> db_pool)
         : db(db_pool)
     {
         this->storage_dir = std::filesystem::path(cfg.storage_root_dir) / cfg.viewer_dir;
