@@ -16,14 +16,21 @@ find_library(PQXX_LIB pqxx REQUIRED)
 FetchContent_Declare(
     cpr
     GIT_REPOSITORY https://github.com/libcpr/cpr.git
-    GIT_TAG 1.14.2
+    GIT_TAG        1.14.2
 )
 FetchContent_Declare(
     json
     URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
-FetchContent_MakeAvailable(cpr json)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        v1.14.0
+)
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(cpr json googletest)
 
 add_definitions(-DCROW_USE_BOOST)
 add_definitions(-DASIO_STANDALONE)
@@ -32,20 +39,16 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     "src/*.cpp" 
     "apps/autodesk_viewer/src/*.cpp"
 )
+list(REMOVE_ITEM SOURCES "src/main.cpp")
 
-add_executable(cpp_web_playground ${SOURCES})
-
-target_include_directories(cpp_web_playground
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${OPENSSL_INCLUDE_DIR}
-    include
-    include/external
-    apps/autodesk_viewer/include
+file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS 
+    "tests/*.cpp" 
+    "apps/autodesk_viewer/tests/*.cpp"
 )
 
-target_link_libraries(cpp_web_playground 
-    PRIVATE
+add_library(app_core STATIC ${SOURCES})
+target_link_libraries(app_core
+    PUBLIC 
     Boost::system
     Threads::Threads
     cpr::cpr
@@ -54,4 +57,23 @@ target_link_libraries(cpp_web_playground
     pqxx
     OpenSSL::SSL
     OpenSSL::Crypto
+)
+
+add_executable(cpp_web_playground src/main.cpp)
+target_link_libraries(cpp_web_playground PRIVATE app_core)
+
+enable_testing()
+
+add_executable(unit_tests ${TEST_SOURCES})
+target_link_libraries(unit_tests PRIVATE GTest::gtest_main app_core)
+
+add_test(NAME AllTests COMMAND unit_tests)
+
+target_include_directories(app_core
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${OPENSSL_INCLUDE_DIR}
+    include
+    include/external
+    apps/autodesk_viewer/include
 )

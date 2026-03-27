@@ -6,8 +6,11 @@
 #include <optional>
 #include <utility>
 #include <cstdint>
+#include <memory>
 
 namespace database {
+    class QueryBuilder;
+
     enum class QueryType { 
         INSERT,
         UPDATE,
@@ -18,7 +21,7 @@ namespace database {
 
     struct ColumnValue {
         std::string column;
-        std::optional<QueryBuilder> query_builder;
+        std::shared_ptr<QueryBuilder> query_builder;
         std::optional<FunctionBuilder> function_builder;
         std::string where_operator;
         std::string compare_with;
@@ -40,13 +43,13 @@ namespace database {
             QueryBuilder(std::string table);
             QueryBuilder& set_table(std::string table);
             QueryBuilder& add_where(std::string column, std::string where_operator = "=", std::string where_comparator = "AND",
-                std::optional<FunctionBuilder> function_builder = std::nullopt, std::optional<QueryBuilder> select_query = std::nullopt);
+                std::optional<FunctionBuilder> function_builder = std::nullopt, std::shared_ptr<QueryBuilder> select_query = nullptr);
             QueryBuilder& add_where(ColumnValue column);
             QueryBuilder& add_where(std::vector<ColumnValue> column);
-            QueryBuilder& add_update(std::string column, std::optional<FunctionBuilder> function_builder = std::nullopt, std::optional<QueryBuilder> select_query = std::nullopt);
+            QueryBuilder& add_update(std::string column, std::optional<FunctionBuilder> function_builder = std::nullopt, std::shared_ptr<QueryBuilder> select_query = nullptr);
             QueryBuilder& add_update(ColumnValue column);
             QueryBuilder& add_update(std::vector<ColumnValue> column);
-            QueryBuilder& add_insert(std::string column, std::optional<FunctionBuilder> function_builder = std::nullopt, std::optional<QueryBuilder> select_query = std::nullopt);
+            QueryBuilder& add_insert(std::string column, std::optional<FunctionBuilder> function_builder = std::nullopt, std::shared_ptr<QueryBuilder> select_query = nullptr);
             QueryBuilder& add_insert(ColumnValue column);
             QueryBuilder& add_insert(std::vector<ColumnValue> column);
             QueryBuilder& add_conflict(std::string column);

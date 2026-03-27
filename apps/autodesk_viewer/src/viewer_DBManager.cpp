@@ -3,11 +3,11 @@
 #include "db/QueryBuilder.hpp"
 #include "crow.h"
 #include <iostream>
+#include <memory>
 
 #define OBJECT_NORMAL_FIELD_LIST                                   \
     X(file_name)                                                   \
     X(file_exists)                                                 \
-    X(folder_id)                                                   \
     X(bucket_key)                                                  \
     X(object_key)                                                  \
     X(object_id)                                                   \
@@ -21,7 +21,6 @@
     X(deleted_at)
 
 #define FOLDER_NORMAL_FIELD_LIST                                   \
-    X(parent_id)                                                   \
     X(name)                                                        \
     X(associated_bucket_key)                                       \
     X(thumbnail_path_from_root)
@@ -92,7 +91,7 @@ namespace autodesk_viewer {
 
     DBManager::DBManager(std::shared_ptr<db::DBPool> db_pool): db(db_pool){}
 
-    db::FunctionBuilder to_time_t (){
+    db::FunctionBuilder DBManager::to_time_t (){
         db::FunctionBuilder func("EXTRACT");
         db::FunctionParam param{.value = "EPOCH FROM", .position = 1, .equals_needed = false};
         func.add_insert_positions(param);
@@ -100,7 +99,7 @@ namespace autodesk_viewer {
         return func;
     }
 
-    void DBManager::update_viewer_oss_object(ViewerOssObject object, bool update_path){
+    void DBManager::update_viewer_oss_object(ViewerOssObject object, bool update_path, std::string parent_path){
         db::QueryBuilder query;
         pqxx::params params;
 
@@ -121,6 +120,17 @@ namespace autodesk_viewer {
             }
             OBJECT_TIME_FIELD_LIST
         #undef X
+
+            if (object.folder_id) {
+                query.add_update("folder_id");
+                params.append(object.folder_id.value());
+            } else if (parent_path != "") {
+                auto sub_query = std::make_shared<db::QueryBuilder>();
+                sub_query->set_table(folder_table);
+                sub_query->add_where("path_from_root");
+                query.add_update("folder_id", std::nullopt, sub_query);
+                params.append(parent_path);
+            }
 
             if (object.path_from_root && update_path) {
                 query.add_update("path_from_root");
@@ -155,7 +165,7 @@ namespace autodesk_viewer {
         return;
     }
 
-    void DBManager::insert_viewer_oss_object(ViewerOssObject object){
+    void DBManager::insert_viewer_oss_object(ViewerOssObject object, std::string parent_path){
         db::QueryBuilder query;
         pqxx::params params;
 
@@ -176,6 +186,17 @@ namespace autodesk_viewer {
             }
             OBJECT_TIME_FIELD_LIST
         #undef X
+        
+        if (object.folder_id) {
+            query.add_insert("folder_id");
+            params.append(object.folder_id.value());
+        } else if (parent_path != "") {
+            auto sub_query = std::make_shared<db::QueryBuilder>();
+            sub_query->set_table(folder_table);
+            sub_query->add_where("path_from_root");
+            query.add_insert("folder_id", std::nullopt, sub_query);
+            params.append(parent_path);
+        }
         
         if (object.path_from_root) {
             query.add_insert("path_from_root").add_conflict("path_from_root");
@@ -199,7 +220,7 @@ namespace autodesk_viewer {
         return;
     }
 
-    void DBManager::upsert_viewer_oss_object(ViewerOssObject object){
+    void DBManager::upsert_viewer_oss_object(ViewerOssObject object, std::string parent_path){
         db::QueryBuilder query;
         pqxx::params params;
 
@@ -222,6 +243,19 @@ namespace autodesk_viewer {
             }
         OBJECT_TIME_FIELD_LIST
         #undef X
+
+        if (object.folder_id) {
+            query.add_insert("folder_id");
+            query.add_update("folder_id");
+            params.append(object.folder_id.value());
+        } else if (parent_path != "") {
+            auto sub_query = std::make_shared<db::QueryBuilder>();
+            sub_query->set_table(folder_table);
+            sub_query->add_where("path_from_root");
+            query.add_insert("folder_id", std::nullopt, sub_query);
+            query.add_update("folder_id");
+            params.append(parent_path);
+        }
 
         if(object.path_from_root) {
             query.add_insert("path_from_root");
@@ -331,7 +365,7 @@ namespace autodesk_viewer {
         }
     }
 
-    void DBManager::update_viewer_folder(ViewerFolder folder, bool update_path) {
+    void DBManager::update_viewer_folder(ViewerFolder folder, bool update_path, std::string parent_path) {
         if (!folder.path_from_root && !folder.id) {
             CROW_LOG_ERROR << "viewer_folders update failed: Cannot update without path or id";
             return;
@@ -357,6 +391,17 @@ namespace autodesk_viewer {
             }
         FOLDER_TIME_FIELD_LIST
         #undef X
+
+        if (folder.parent_id) {
+            query.add_update("parent_id");
+            params.append(folder.parent_id.value());
+        } else if (parent_path != "") {
+            auto sub_query = std::make_shared<db::QueryBuilder>();
+            sub_query->set_table(folder_table);
+            sub_query->add_where("path_from_root");
+            query.add_update("parent_id", std::nullopt, sub_query);
+            params.append(parent_path);
+        }
 
         if (folder.path_from_root) {
             if (update_path) {
@@ -386,7 +431,7 @@ namespace autodesk_viewer {
         return;
     }
 
-    void DBManager::insert_viewer_folder(ViewerFolder folder) {
+    void DBManager::insert_viewer_folder(ViewerFolder folder, std::string parent_path) {
         db::QueryBuilder query;
         pqxx::params params;
         query.set_table(this->folder_table);
@@ -407,6 +452,17 @@ namespace autodesk_viewer {
         FOLDER_TIME_FIELD_LIST
         #undef X
 
+        if (folder.parent_id) {
+            query.add_insert("parent_id");
+            params.append(folder.parent_id.value());
+        } else if (parent_path != "") {
+            auto sub_query = std::make_shared<db::QueryBuilder>();
+            sub_query->set_table(folder_table);
+            sub_query->add_where("path_from_root");
+            query.add_insert("parent_id", std::nullopt, sub_query);
+            params.append(parent_path);
+        }
+
         if (folder.path_from_root) {
             query.add_insert("path_from_root");
             params.append(folder.path_from_root.value());
@@ -424,7 +480,7 @@ namespace autodesk_viewer {
         return;
     }
 
-    void DBManager::upsert_viewer_folder(ViewerFolder folder) {
+    void DBManager::upsert_viewer_folder(ViewerFolder folder, std::string parent_path) {
         if (!folder.path_from_root) {
             CROW_LOG_ERROR << "viewer_folder upsert error: Cannot upsert without path";
         }
@@ -449,6 +505,19 @@ namespace autodesk_viewer {
             }
         FOLDER_TIME_FIELD_LIST
         #undef X
+
+        if (folder.parent_id) {
+            query.add_insert("parent_id");
+            query.add_update("parent_id");
+            params.append(folder.parent_id.value());
+        } else if (parent_path != "") {
+            auto sub_query = std::make_shared<db::QueryBuilder>();
+            sub_query->set_table(folder_table);
+            sub_query->add_where("path_from_root");
+            query.add_insert("parent_id", std::nullopt, sub_query);
+            query.add_update("parent_id");
+            params.append(parent_path);
+        }
 
         if (folder.path_from_root) {
             query.add_insert("path_from_root");

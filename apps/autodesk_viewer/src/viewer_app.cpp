@@ -1,5 +1,6 @@
 #include "viewer_app.hpp"
 
+#include "viewer_DBManager.hpp"
 #include "viewer_auth.hpp"
 #include "ServerConfig.hpp"
 #include "utils.hpp"
@@ -11,7 +12,7 @@
 
 namespace autodesk_viewer {
     AutodeskViewer::AutodeskViewer(server::ServerConfig cfg, std::shared_ptr<database::DBPool> db_pool)
-        : db(db_pool)
+        : dbmanager(db_pool)
     {
         this->storage_dir = std::filesystem::path(cfg.storage_root_dir) / cfg.viewer_dir;
         this->client_id = cfg.autodesk_client_id;
@@ -87,17 +88,13 @@ namespace autodesk_viewer {
         std::sort(dirs.begin(), dirs.end(), [](const auto& a, const auto& b) {
             return a.path().string().length() < b.path().string().length();
         });
-
-        try {
-            auto conn_ptr = db->acquire();
-            pqxx::work txn(*conn_ptr);
-
-            txn.exec_params(
-                "INSERT INTO viewer_folders (name, path_from_root, created_at) "
-                "VALUES ($1, $2, NOW()) "
-                "ON CONFLICT (path_from_root) DO NOTHING",
-                this->storage_dir.filename().string(),
-                this->storage_dir.string()
+            pqxx::connection conn("");  //apagar
+            pqxx::work txn(conn);       //apagar
+            this->dbmanager.upsert_viewer_folder(
+                {
+                    .name = this->storage_dir.filename().string(),
+                    .path_from_root = this->storage_dir.string()
+                }
             );
 
             for (const auto& entry : dirs) {
@@ -105,16 +102,15 @@ namespace autodesk_viewer {
                     std::string file_name = entry.path().filename().string();
                     std::string parent_path = entry.path().parent_path().string();
                     std::string file_path = entry.path().string();
-                    txn.exec_params(
-                        "INSERT INTO viewer_folders (name, parent_id, path_from_root, created_at) "
-                        "VALUES ($1, (SELECT id FROM viewer_folders WHERE path_from_root = $2), $3, NOW()) "
-                        "ON CONFLICT (path_from_root) DO NOTHING",
-                        file_name,
-                        parent_path,
-                        file_path
+
+                    this->dbmanager.upsert_viewer_folder(
+                        {
+                            .name = entry.path().filename().string(),
+                            .path_from_root = entry.path().string()
+                        }
                     );
                 } else if(entry.is_regular_file()) {
-                    
+
                     auto r = txn.exec_params(
                         "SELECT EXTRACT(EPOCH FROM last_modified)::BIGINT FROM viewer_oss_objects WHERE path_from_root = $1",
                         entry.path().string()
@@ -162,8 +158,5 @@ namespace autodesk_viewer {
             }
 
             txn.commit();
-        } catch (const std::exception& e) {
-            CROW_LOG_ERROR << "Erro na sincronização: " << e.what();
-        }
     }
 }

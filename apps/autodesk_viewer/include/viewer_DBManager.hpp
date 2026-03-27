@@ -56,15 +56,15 @@ namespace autodesk_viewer {
         public:
             DBManager(std::shared_ptr<database::DBPool> db_pool);
 
-            void update_viewer_oss_object(ViewerOssObject object, bool update_path = false);
-            void insert_viewer_oss_object(ViewerOssObject object);
-            void upsert_viewer_oss_object(ViewerOssObject object);
+            void update_viewer_oss_object(ViewerOssObject object, bool update_path = false, std::string parent_path = "");
+            void insert_viewer_oss_object(ViewerOssObject object, std::string parent_path = "");
+            void upsert_viewer_oss_object(ViewerOssObject object, std::string parent_path = "");
             void delete_viewer_oss_object(ViewerOssObject object);
             std::vector<ViewerOssObject> get_viewer_oss_objects(ViewerOssObject object, uintmax_t limit = 0, std::vector<std::string> select_columns = {"*"}, bool no_where = false);
 
-            void update_viewer_folder(ViewerFolder folder, bool update_path = false);
-            void insert_viewer_folder(ViewerFolder folder);
-            void upsert_viewer_folder(ViewerFolder folder);
+            void update_viewer_folder(ViewerFolder folder, bool update_path = false, std::string parent_path = "");
+            void insert_viewer_folder(ViewerFolder folder, std::string parent_path = "");
+            void upsert_viewer_folder(ViewerFolder folder, std::string parent_path = "");
             void delete_viewer_folder(ViewerFolder folder);
             std::vector<ViewerFolder> get_folders(ViewerFolder folder, uintmax_t limit = 0, std::vector<std::string> select_columns = {"*"}, bool no_where = false);
 

@@ -15,7 +15,7 @@ namespace database {
         private:
             std::string function;
             std::vector<FunctionParam> params;
-            std::vector<FunctionParam> insert_in_positions;
+            mutable std::vector<FunctionParam> insert_in_positions;
 
         public:
             FunctionBuilder(std::string function_name);

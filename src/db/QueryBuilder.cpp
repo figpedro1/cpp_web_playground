@@ -13,8 +13,8 @@ namespace database {
         return *this;
     }
     
-    QueryBuilder& QueryBuilder::add_where(std::string column, std::string where_operator, std::string where_comparator, std::optional<FunctionBuilder> func_builder, std::optional<QueryBuilder> select_query){
-        ColumnValue val = {.column = std::move(column), .query_builder = std::move(select_query), .function_builder = func_builder, .where_operator = where_operator, .compare_with = where_comparator};
+    QueryBuilder& QueryBuilder::add_where(std::string column, std::string where_operator, std::string where_comparator, std::optional<FunctionBuilder> func_builder, std::shared_ptr<QueryBuilder> select_query){
+        ColumnValue val = {.column = std::move(column), .query_builder = select_query, .function_builder = func_builder, .where_operator = where_operator, .compare_with = where_comparator};
         this->where_clauses.push_back(std::move(val));
         return *this;
     }
@@ -29,8 +29,8 @@ namespace database {
         return *this;
     }
 
-    QueryBuilder& QueryBuilder::add_update(std::string column, std::optional<FunctionBuilder> func_builder, std::optional<QueryBuilder> select_query){
-        ColumnValue val = {.column = std::move(column), .query_builder = std::move(select_query), .function_builder = func_builder};
+    QueryBuilder& QueryBuilder::add_update(std::string column, std::optional<FunctionBuilder> func_builder, std::shared_ptr<QueryBuilder> select_query){
+        ColumnValue val = {.column = std::move(column), .query_builder = select_query, .function_builder = func_builder};
         this->update_columns.push_back(std::move(val));
         return *this;
     }
@@ -45,8 +45,8 @@ namespace database {
         return *this;
     }
 
-    QueryBuilder& QueryBuilder::add_insert(std::string column, std::optional<FunctionBuilder> func_builder, std::optional<QueryBuilder> select_query){
-        ColumnValue val = {.column = std::move(column), .query_builder = std::move(select_query), .function_builder = func_builder};
+    QueryBuilder& QueryBuilder::add_insert(std::string column, std::optional<FunctionBuilder> func_builder, std::shared_ptr<QueryBuilder> select_query){
+        ColumnValue val = {.column = std::move(column), .query_builder = select_query, .function_builder = func_builder};
         this->insert_columns.push_back(std::move(val));
         return *this;
     }
@@ -76,7 +76,7 @@ namespace database {
         return *this;
     }
 
-    QueryBuilder& QueryBuilder::add_select(std::string column){
+    QueryBuilder& QueryBuilder::add_select(std::vector<std::string> column){
         this->select_columns.insert(this->select_columns.end(), column.begin(), column.end());
         return *this;
     }
@@ -102,7 +102,7 @@ namespace database {
 
             if (!values.empty()) values += ", ";
             if (insert.query_builder){
-                values += "(" + insert.query_builder.value().build_select_query(current_param) + ")";
+                values += "(" + insert.query_builder->build_select_query(current_param) + ")";
             } else if (insert.function_builder) {
                 values += insert.function_builder.value().build_function(current_param);
             } else {
@@ -140,7 +140,7 @@ namespace database {
             }
 
             if (update.query_builder) {
-                column_value += update.column + " = " + update.query_builder.value().build_select_query(current_param);
+                column_value += update.column + " = " + update.query_builder->build_select_query(current_param);
                 continue;
             }
 
@@ -173,7 +173,7 @@ namespace database {
             return "";
         }
         size_t current_param = 1;
-        return "DELETE FROM" + this->table_name.value() + this->build_where(current_param);
+        return "DELETE FROM " + this->table_name.value() + this->build_where(current_param);
     }
 
     std::string QueryBuilder::build_select_query(bool no_where, uintmax_t limit) const {
@@ -214,11 +214,15 @@ namespace database {
         }
         std::string temp_value;
 
-        for (const auto& where : this->where_clauses) {
-            if (!temp_value.empty()) temp_value += " " + where.compare_with + " ";
+        for (size_t i = 0; i < this->where_clauses.size(); ++i) {
+            const auto& where = this->where_clauses[i];
+            
+            if (i > 0) {
+                temp_value += " " + this->where_clauses[i-1].compare_with + " ";
+            }
 
             if (where.query_builder) {
-                temp_value += where.column + " " + where.where_operator + " (" + where.query_builder.value().build_select_query(current_param) + ")";
+                temp_value += where.column + " " + where.where_operator + " (" + where.query_builder->build_select_query(current_param) + ")";
                 continue;
             }
 
